@@ -47,6 +47,8 @@ public class FirstPersonController : MonoBehaviour
         CheckGround();
         HandleMovement();
         HandleLook();
+
+        Debug.Log(_isGrounded? "Grounded" : "Not Grounded");
     }
 
     private void CheckGround()
@@ -96,4 +98,10 @@ public class FirstPersonController : MonoBehaviour
     }
 
     public void SetCanMove(bool canMove) => _canMove = canMove;
+
+    void OnDrawGizmos()
+    {
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawWireSphere(_groundCheck.position, _groundDistance);
+    }
 }
