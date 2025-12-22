@@ -29,7 +29,7 @@ public class MainMenuManager : MonoBehaviour
     [SerializeField] private CanvasGroup optionsCanvasGroup;
     
     [Header("Scene Names")]
-    [SerializeField] private string gameSceneName = "GameLevel";
+    [SerializeField] private string gameSceneName = "SampleScene";
     
     [Header("Animation Settings")]
     [SerializeField] private float fadeDuration = 0.3f;
