@@ -20,7 +20,7 @@ public class FirstPersonController : MonoBehaviour
 
     [Header("Ground Check")]
     [SerializeField] private Transform _groundCheck;
-    [SerializeField] private float _groundDistance = 0.4f;
+    //[SerializeField] private float _groundDistance = 0.4f;
     [SerializeField] private LayerMask _groundMask;
 
     private CharacterController _controller;
@@ -44,19 +44,36 @@ public class FirstPersonController : MonoBehaviour
     {
         if (!_canMove) return;
 
-        CheckGround();
+        //CheckGround();
+        _isGrounded = IsGrounded();
         HandleMovement();
         HandleLook();
 
         Debug.Log(_isGrounded? "Grounded" : "Not Grounded");
     }
 
-    private void CheckGround()
+    /*private void CheckGround()
     {
         _isGrounded = Physics.CheckSphere(_groundCheck.position, _groundDistance, _groundMask);
         
         if (_isGrounded && _velocity.y < 0)
             _velocity.y = -2f;
+    }*/
+
+    //Most robust ground detection for character controller
+    bool IsGrounded()
+    {
+        Vector3 origin = _groundCheck.position + Vector3.up * 0.1f;
+        float radius = _controller.radius * 0.9f;
+
+        return _controller.isGrounded ||Physics.SphereCast(
+            origin,
+            radius,
+            Vector3.down,
+            out RaycastHit hit,
+            0.2f,
+            _groundMask
+        );
     }
 
     private void HandleMovement()
@@ -99,9 +116,9 @@ public class FirstPersonController : MonoBehaviour
 
     public void SetCanMove(bool canMove) => _canMove = canMove;
 
-    void OnDrawGizmos()
+    /*void OnDrawGizmos()
     {
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireSphere(_groundCheck.position, _groundDistance);
-    }
+    }*/
 }
