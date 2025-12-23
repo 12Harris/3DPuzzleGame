@@ -3,6 +3,7 @@
 // ============================================================================
 using UnityEngine;
 using UnityEngine.AI;
+using Vault.DataStrucures;
 
 [RequireComponent(typeof(CharacterController))]
 public class FirstPersonController : MonoBehaviour
@@ -43,6 +44,27 @@ public class FirstPersonController : MonoBehaviour
         
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
+    }
+
+    void Start()
+    {
+        TPriorityQueue<int> queue = new TPriorityQueue<int>();
+        queue.Enqueue(0,0);
+        queue.Enqueue(1,1);
+        queue.Enqueue(2,2);
+        queue.Enqueue(3,3);
+        queue.Enqueue(4,4);
+
+        //Queue Before
+        Debug.Log("Queue Before:");
+        Debug.Log(queue);
+
+        //Remove front element
+        queue.Dequeue();
+        
+        //Queue After
+        Debug.Log("Queue After:");
+        Debug.Log(queue);
     }
 
     void Update()

@@ -1,0 +1,21 @@
+1) FP Controller 		ok					
+2) UI Main Menu			ok
+3) Pressure Plate		
+	TODO: activate door 
+4) Save System			todo
+5) record Player Actions	todo
+6) Design First Test Level	todo
+
+
+
+
+priority Queue 0 val0					
+priority Queue 1 val1
+priority Queue 2 val2
+priority Queue 3 val3
+priority Queue 4 val4
+
+priority Queue 0 val1				
+priority Queue 1 val2
+priority Queue 2 val3
+priority Queue 3 val4
