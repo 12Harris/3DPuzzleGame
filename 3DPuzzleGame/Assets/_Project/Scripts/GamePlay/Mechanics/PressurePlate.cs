@@ -35,7 +35,7 @@ public class PressurePlate : MonoBehaviour
     void OnTriggerEnter(Collider other)
     {
         Debug.Log(other + " stepped on Pressure Plate!");
-        if (other.CompareTag("Player") || other.CompareTag("Movable"))
+        if (other.CompareTag("Player") /*|| other.CompareTag("Movable")*/)
         {
             Debug.Log("Object stepped on Pressure Plate!");
             _objectsOnPlate++;
@@ -49,7 +49,7 @@ public class PressurePlate : MonoBehaviour
 
     void OnTriggerExit(Collider other)
     {
-        if (other.CompareTag("Player") || other.CompareTag("Movable"))
+        if (other.CompareTag("Player") /*|| other.CompareTag("Movable")*/)
         {
             _objectsOnPlate--;
             if (_objectsOnPlate <= 0)

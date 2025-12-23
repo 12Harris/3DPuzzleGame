@@ -2,6 +2,7 @@
 // FIRST PERSON CONTROLLER
 // ============================================================================
 using UnityEngine;
+using UnityEngine.AI;
 
 [RequireComponent(typeof(CharacterController))]
 public class FirstPersonController : MonoBehaviour
@@ -10,8 +11,12 @@ public class FirstPersonController : MonoBehaviour
     [SerializeField] private float _walkSpeed = 5f;
     [SerializeField] private float _runSpeed = 8f;
     [SerializeField] private float _crouchSpeed = 2.5f;
+    [SerializeField] private float _currentSpeed = 0f;
+    [SerializeField] private float _acceleration = 2f;
     [SerializeField] private float _jumpHeight = 2f;
     [SerializeField] private float _gravity = -9.81f;
+    private Vector2 _moveDirection = Vector3.zero;
+    private Vector2 _moveInput = Vector3.zero;
 
     [Header("Look")]
     [SerializeField] private Transform _cameraTransform;
@@ -52,14 +57,6 @@ public class FirstPersonController : MonoBehaviour
         Debug.Log(_isGrounded? "Grounded" : "Not Grounded");
     }
 
-    /*private void CheckGround()
-    {
-        _isGrounded = Physics.CheckSphere(_groundCheck.position, _groundDistance, _groundMask);
-        
-        if (_isGrounded && _velocity.y < 0)
-            _velocity.y = -2f;
-    }*/
-
     //Most robust ground detection for character controller
     bool IsGrounded()
     {
@@ -78,18 +75,46 @@ public class FirstPersonController : MonoBehaviour
 
     private void HandleMovement()
     {
-        Vector2 input = InputHandler.Instance.MoveInput;
-        
-        // Calculate speed
-        float speed = _walkSpeed;
-        if (Input.GetKey(KeyCode.LeftShift))
-            speed = _runSpeed;
-        else if (Input.GetKey(KeyCode.LeftControl))
-            speed = _crouchSpeed;
+        _moveInput= InputHandler.Instance.MoveInput;
 
+         // Calculate speed
+        var targetspeed = 0f;
+        if(_moveInput.magnitude > 0f)
+        {
+        
+            targetspeed = _walkSpeed;
+            
+            if (Input.GetKey(KeyCode.LeftControl))
+                targetspeed = _crouchSpeed;
+
+            else if (Input.GetKey(KeyCode.LeftShift))
+                targetspeed = _runSpeed;
+
+            
+            _moveDirection = _moveInput;
+
+        }
+        else 
+        {
+            targetspeed = 0f;
+            if(_currentSpeed <= 0f)
+            {
+                _moveDirection = Vector3.zero;
+            }
+        }
+        
+
+        if(_moveInput.magnitude > 0.001f || _currentSpeed > 0f)
+        {
+            _currentSpeed = Mathf.Lerp(_currentSpeed, 
+            targetspeed, 
+            Time.deltaTime * _acceleration);
+        }
+    
         // Movement
-        Vector3 move = transform.right * input.x + transform.forward * input.y;
-        _controller.Move(move * speed * Time.deltaTime);
+        //Vector3 move = transform.right * _moveInput.x + transform.forward * _moveInput.y;
+        Vector3 move = transform.right * _moveDirection.x + transform.forward * _moveDirection.y;
+        _controller.Move(move *_currentSpeed * Time.deltaTime);
 
         // Jump
         if (Input.GetButtonDown("Jump") && _isGrounded)

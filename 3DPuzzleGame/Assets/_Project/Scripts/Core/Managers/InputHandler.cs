@@ -12,7 +12,6 @@ public class InputHandler : Singleton<InputHandler>
     public event Action OnAttackPressed;
     public event Action OnInteractPressed;
     public event Action OnPausePressed;
-
     // Axis values
     private Vector2 _moveInput;
     private Vector2 _lookInput;
