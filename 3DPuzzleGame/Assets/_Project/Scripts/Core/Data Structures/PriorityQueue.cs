@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using UnityEditor.Rendering;
+using UnityEngine;
 
 namespace Vault.DataStrucures
 {
@@ -32,7 +33,8 @@ namespace Vault.DataStrucures
         public int Count => _priorityMap.Values.Sum(q => q.Count);
 
         //returns count of all queues in the priority map
-        public int QueueCount => _priorityMap.Values.Count;
+        public int QueueCount => _priorityMap.Count;
+        int test => _priorityMap.Count;
 
 
         //add to front of queue with given priority
@@ -45,11 +47,12 @@ namespace Vault.DataStrucures
             _priorityMap[priority].Enqueue(item);
         }
         
-        //add multiple values to front of queue with given priority
-        public void Enqueue(int priority, params T[] values)
+        //add multiple values to front of queue with auto-calculated priority
+        public void Enqueue(params T[] values)
         {
+            int oldQueueCount = QueueCount;
             foreach(var value in values)
-                Enqueue(value, priority);
+                Enqueue(value,oldQueueCount);
         }
 
 

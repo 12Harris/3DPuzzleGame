@@ -90,7 +90,7 @@ namespace Vault.DataStrucures
         }
 
 
-        public void Reverse()
+        public Node<T> Reverse(Node<T> head)
         {
             Node<T> previous = null;
             Node<T> current = head;
@@ -98,33 +98,36 @@ namespace Vault.DataStrucures
 
             while (current != null)
             {
-                next = current.Next;
+                next = current.Next;        
                 current.Next = previous;
                 previous = current;
                 current = next;
             }
 
-            head = previous;
+            //head = previous;
+            return previous;
         }
 
-        private Node<T> ReverseList(Node<T> head)
+        LinkedList<T> CopyList(Node<T> head)
         {
-            Node<T> prev = null;
-            Node<T> current = head;
-            Node<T> next = null;
+            if (head == null) return null;
 
-            while (current != null)
+            LinkedList<T> copy = new LinkedList<T>();
+
+            Node<T> newHead = new Node<T>(head.Data);//copy head
+            Node<T> currentOld = head.Next;//original old
+            //Node<T> currentNew = newHead;//copy new
+
+            copy.Append(currentOld.Data);
+
+            while (currentOld != null)
             {
-                next = current.Next;
-                current.Next = prev;
-                prev = current;
-                current = next;
+                currentOld = currentOld.Next;
+                copy.Append(currentOld.Data);
             }
 
-            return prev;
+            return copy;
         }
-
-
 
 
         public T FindMiddle()
@@ -179,6 +182,18 @@ namespace Vault.DataStrucures
             // Find the middle of the list
             Node<T> slow = head;
             Node<T> fast = head;
+
+            /*1 2 3 4 Null
+             *S:1, F:1
+             *1) S:2, F:3
+             *S = 2*/
+
+            /*1 2 3 4 5 Null
+             *S:1, F:1
+             *1) S:2, F:3
+             *1) S:3, F:5
+             *S = 3*/
+
             while (fast.Next != null && fast.Next.Next != null)
             {
                 slow = slow.Next;
@@ -186,7 +201,7 @@ namespace Vault.DataStrucures
             }
 
             // Reverse the second half of the list
-            Node<T> secondHalf = ReverseList(slow.Next);
+            Node<T> secondHalf = Reverse(slow.Next);
             Node<T> firstHalf = head;
 
             // Compare the two halves
