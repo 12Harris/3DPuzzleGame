@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 
 
@@ -16,11 +17,40 @@ namespace Vault.DataStrucures
         }
     }
 
-    public class LinkedList<T>
+    public class LinkedList<T> : IEnumerable<Node<T>>
     {
         private Node<T> head;
 
         public Node<T> Head => head;
+
+        private Node<T> _iterator;
+
+        private int _count = 0;
+
+        public int Count{get {if(_count == 0)Traverse(null); return _count; }}
+
+        //Indexer
+        //Indexer declaration
+        public T this[int index]
+        {
+            get
+            {
+                if(index < Count)
+                {
+                    Traverse(null,index+1);
+                    return _iterator.Data;
+                }
+                return default;
+            }
+            set
+            {
+                if(index < Count)
+                {
+                    Traverse(null,index+1);
+                    _iterator.Data = value;
+                }
+            }
+        }
 
         public LinkedList()
         {
@@ -79,16 +109,17 @@ namespace Vault.DataStrucures
         }
 
         //This method allows us to perform any action on each node's data, such as printing it or performing calculations.
-        public void Traverse(Action<T> action)
+        public void Traverse(Action<T> action, int limit=-1)
         {
-            Node<T> current = head;
-            while (current != null)
-            {
-                action(current.Data);
-                current = current.Next;
+            _iterator = head;
+            bool firstTrarversal = _count == 0;
+            while (_iterator != null && (limit ==-1 || _count < limit))
+            { 
+                action(_iterator.Data);
+                _iterator =_iterator.Next;
+                if(firstTrarversal)_count++;
             }
         }
-
 
         public Node<T> Reverse(Node<T> head)
         {
@@ -250,6 +281,21 @@ namespace Vault.DataStrucures
             }
 
             return result;
+        }
+
+        public IEnumerator<Node<T>> GetEnumerator()
+        {   
+            Node<T> current = head;
+            while (current != null)
+            {
+                yield return current;
+                current = current.Next;
+            }
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
         }
     }
 }
