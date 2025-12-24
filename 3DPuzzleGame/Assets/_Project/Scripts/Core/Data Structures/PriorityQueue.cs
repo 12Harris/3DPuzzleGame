@@ -35,7 +35,7 @@ namespace Vault.DataStrucures
         public int QueueCount => _priorityMap.Values.Count;
 
 
-        //add to front of queue with givne priority
+        //add to front of queue with given priority
         public void Enqueue(T item, int priority)
         {
             if (!_priorityMap.ContainsKey(priority))
@@ -44,7 +44,13 @@ namespace Vault.DataStrucures
             }
             _priorityMap[priority].Enqueue(item);
         }
-
+        
+        //add multiple values to front of queue with given priority
+        public void Enqueue(int priority, params T[] values)
+        {
+            foreach(var value in values)
+                Enqueue(value, priority);
+        }
 
 
         //returns and removes front element of queue with highest piority

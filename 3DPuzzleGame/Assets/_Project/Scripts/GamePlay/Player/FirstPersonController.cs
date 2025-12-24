@@ -48,12 +48,19 @@ public class FirstPersonController : MonoBehaviour
 
     void Start()
     {
+        //ToDo: Enqueue method with TQueue as parameter
         TPriorityQueue<int> queue = new TPriorityQueue<int>();
-        queue.Enqueue(0,0);
+        /*queue.Enqueue(0,0);
         queue.Enqueue(1,1);
         queue.Enqueue(2,2);
         queue.Enqueue(3,3);
-        queue.Enqueue(4,4);
+        queue.Enqueue(4,4);*/
+
+        queue.Enqueue(0,0,1,2,3,4);
+        queue.Enqueue(1,5,6,7,8,9);
+        queue.Enqueue(2,10,11,12,13,14);
+        queue.Enqueue(3,15,16,17,18,19);
+        queue.Enqueue(4,20,21,22,23,24);
 
         //Queue Before
         Debug.Log("Queue Before:");
