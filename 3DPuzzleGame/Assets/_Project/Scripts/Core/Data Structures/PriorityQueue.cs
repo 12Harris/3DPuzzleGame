@@ -61,16 +61,13 @@ namespace Vault.DataStrucures
                 throw new InvalidOperationException("Queue is empty");
             }
 
-            var highestPriority = _priorityMap.Keys.Min();
-            var highestPriorityQueue = _priorityMap[highestPriority];
-
-            T item = highestPriorityQueue.Dequeue();
+            T item = _priorityMap[0].Dequeue();
 
             //Reassign the priorities to the number of queues-1
             //and remove the last queue(queue with lowes priority)
-            if (highestPriorityQueue.Count == 0)
+            if (_priorityMap[0].Count == 0)
             {
-                _priorityMap.Remove(highestPriority);
+                _priorityMap.Remove(0);
 
                 for(int i = 0; i < QueueCount-1; i++)
                 {
@@ -91,10 +88,7 @@ namespace Vault.DataStrucures
                 throw new InvalidOperationException("Queue is empty");
             }
 
-            var highestPriority = _priorityMap.Keys.Min();
-            var highestPriorityQueue = _priorityMap[highestPriority];
-
-            return highestPriorityQueue.Peek();
+            return _priorityMap[0].Peek();
         }
 
         //Clears all queues
