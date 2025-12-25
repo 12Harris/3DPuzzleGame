@@ -262,7 +262,8 @@ public class Vec2 : IComparable<Vec2>
             while (queue.Count > 0)
             {
                 BinaryTreeNode<T> current = queue.Dequeue();
-                action(current.Data);
+                if(action != null) action(current.Data);
+                countedNodesOnLevel++;
 
                 if(countedNodesOnLevel== nodesOnLevel)
                 {

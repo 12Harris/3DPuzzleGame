@@ -15,7 +15,9 @@
                   text="Idle..."
                   class="status" />
 
-        <ui:Button name="treeNode" class="treenode" />
+
+        <ui:VisualElement name="tree-container" class="tree-container">
+        </ui:VisualElement>
         
     </ui:VisualElement>
 

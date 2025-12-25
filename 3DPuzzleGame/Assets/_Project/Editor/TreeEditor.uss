@@ -13,11 +13,35 @@
     color: #bbbbbb;
 }
 
-#mybutton {
-    width: 20px;
+.tree-container {
+    flex-direction: column;
+    gap: 8px;
 }
 
-.treenode {
+.tree-level {
+    flex-direction: row;
+    gap: 8px;
+
+    align-items: center;
+    justify-content: flex-start;
+}
+
+/*.image-row {
+    flex-direction: row;
+    gap: 8px;
+
+    align-items: center;
+    justify-content: flex-start;
+}
+
+.image-row Image {
+    width: 64px;
+    height: 64px;
+}*/
+
+
+
+.tree-level Image {
     width: 64px;
     height: 64px;
     border-radius: 8px;
