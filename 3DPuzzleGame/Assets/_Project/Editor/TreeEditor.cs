@@ -7,12 +7,14 @@ public class TreEditorWindow : EditorWindow
 {
     private const string UxmlPath = "Assets/_Project/Editor//TreeEditor.uxml";
     private const string UssPath  = "Assets/_Project/Editor//TreeEditor.uss";
+    private static Texture2D treeNodeIcon;
 
     [MenuItem("Tools/Tree Editor")]
     public static void ShowWindow()
     {
         TreEditorWindow wnd = GetWindow<TreEditorWindow>();
         wnd.titleContent = new GUIContent("Tree Editor Window");
+
     }
 
     public void CreateGUI()
@@ -36,10 +38,14 @@ public class TreEditorWindow : EditorWindow
         toolbar.Add(new ToolbarButton(() => Debug.Log("Toolbar Action")) { text = "Run" });
         rootVisualElement.Add(toolbar);
 
-        //image
-        Image treenode = rootVisualElement.Q<Image>("treenode");
-        treenode.image = AssetDatabase.LoadAssetAtPath<Texture2D>(
-            "Assets/_Project/Editor/Icons/treenode.png");
+        //treenode
+        treeNodeIcon = AssetDatabase.LoadAssetAtPath<Texture2D> ("Assets/_Project/Editor/Icons/treenode.png");
+        var button = rootVisualElement.Q<Button>("treeNode");
+        if(button == null)
+            Debug.Log("Button is null!");
+
+        //if(treeNodeIcon != null)
+        button.style.backgroundImage = new StyleBackground(treeNodeIcon);
 
         // Bind logic
         myButton.clicked += () =>

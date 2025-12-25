@@ -16,3 +16,17 @@
 #mybutton {
     width: 20px;
 }
+
+.treenode {
+    width: 64px;
+    height: 64px;
+    border-radius: 8px;
+}
+
+/*.treenode:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.treenode:active {
+    background-color: rgba(255, 255, 255, 0.2);
+}*/
