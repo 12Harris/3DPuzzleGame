@@ -1,0 +1,18 @@
+.root {
+    padding: 10px;
+}
+
+.title {
+    font-size: 16px;
+    unity-font-style: bold;
+    margin-bottom: 8px;
+}
+
+.status {
+    margin-top: 6px;
+    color: #bbbbbb;
+}
+
+#mybutton {
+    width: 20px;
+}

@@ -2,10 +2,82 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-
+using System.Security.Cryptography;
+using Unity.VisualScripting;
+using UnityEngine;
 namespace Vault.DataStrucures
 {
 
+// ===============================================================
+// Vec2 structure
+// ===============================================================
+
+public class Vec2 : IComparable<Vec2>
+{
+    public float X;
+    public float Y;
+
+    public Vec2(float x, float y)
+    {
+        X = x;
+        Y = y;
+    }
+
+    // Common vectors
+    public static Vec2 Zero => new Vec2(0f, 0f);
+    public static Vec2 One => new Vec2(1f, 1f);
+    public static Vec2 Up => new Vec2(0f, 1f);
+    public static Vec2 Right => new Vec2(1f, 0f);
+
+    // Magnitude
+    public float Length => MathF.Sqrt(X * X + Y * Y);
+    public float LengthSquared => X * X + Y * Y;
+
+    // Normalize
+    public Vec2 Normalized()
+    {
+        float length = Length;
+        return length > 0f ? this / length : Zero;
+    }
+
+    // Dot product
+    public static float Dot(Vec2 a, Vec2 b)
+        => a.X * b.X + a.Y * b.Y;
+
+    // Distance
+    public static float Distance(Vec2 a, Vec2 b)
+        => (a - b).Length;
+
+
+    //Comparison
+    public int CompareTo(Vec2 other)
+    {
+        if(X < other.X || Y < other.Y)
+            return-1;
+        
+        else if(X == other.X && Y == other.Y)
+            return 0;
+        
+        else 
+            return 1;
+    }
+
+    // Operators
+    public static Vec2 operator +(Vec2 a, Vec2 b)
+        => new Vec2(a.X + b.X, a.Y + b.Y);
+
+    public static Vec2 operator -(Vec2 a, Vec2 b)
+        => new Vec2(a.X - b.X, a.Y - b.Y);
+
+    public static Vec2 operator *(Vec2 v, float scalar)
+        => new Vec2(v.X * scalar, v.Y * scalar);
+
+    public static Vec2 operator /(Vec2 v, float scalar)
+        => new Vec2(v.X / scalar, v.Y / scalar);
+
+    public override string ToString()
+        => $"({X}, {Y})";
+}
     // ===============================================================
     // Binary Tree Node
     // ===============================================================
@@ -14,6 +86,7 @@ namespace Vault.DataStrucures
         public T Data { get; set; }
         public BinaryTreeNode<T> Left { get; set; }
         public BinaryTreeNode<T> Right { get; set; }
+        public int Level {get;} = 0;
         
         public BinaryTreeNode(T data)
         {
@@ -31,6 +104,11 @@ namespace Vault.DataStrucures
     public class BinarySearchTree<T> where T : IComparable<T>
     {
         public BinaryTreeNode<T> Root { get; private set; }
+
+        private int _levels = 0;
+        public int Levels => _levels;
+
+        private int _currentLeaf = 0;
         
         public void Insert(T data)
         {
@@ -122,6 +200,7 @@ namespace Vault.DataStrucures
             action(node.Data);
             InorderRecursive(node.Right, action);
         }
+
         
         // Preorder Traversal (Root, Left, Right)
         public void PreorderTraversal(Action<T> action)
@@ -143,7 +222,7 @@ namespace Vault.DataStrucures
         {
             PostorderRecursive(Root, action);
         }
-        
+
         private void PostorderRecursive(BinaryTreeNode<T> node, Action<T> action)
         {
             if (node == null) return;
@@ -151,6 +230,22 @@ namespace Vault.DataStrucures
             PostorderRecursive(node.Left, action);
             PostorderRecursive(node.Right, action);
             action(node.Data);
+        }
+
+        // Postorder Traversal (Left, Right, Root)
+        public void PostorderTraversal<T2>(Action<T2> action, Func<BinaryTreeNode<T>,T2> func)
+        {
+            PostorderRecursive(Root, action, func);
+        }
+        
+
+        private void PostorderRecursive<T2>(BinaryTreeNode<T> node, Action<T2> action, Func<BinaryTreeNode<T>,T2> func)
+        {
+            if (node == null) return;
+            
+            PostorderRecursive(node.Left, action, func);
+            PostorderRecursive(node.Right, action, func);
+            action(func(node));
         }
         
         // Level Order Traversal (BFS)
@@ -160,11 +255,21 @@ namespace Vault.DataStrucures
             
             Queue<BinaryTreeNode<T>> queue = new Queue<BinaryTreeNode<T>>();
             queue.Enqueue(Root);
+            _levels = 0;
+            var nodesOnLevel = 1;
+            var countedNodesOnLevel = 0;
             
             while (queue.Count > 0)
             {
                 BinaryTreeNode<T> current = queue.Dequeue();
                 action(current.Data);
+
+                if(countedNodesOnLevel== nodesOnLevel)
+                {
+                    _levels++;
+                    countedNodesOnLevel = 0;
+                    nodesOnLevel = (int)Math.Pow(2,_levels);
+                }
                 
                 if (current.Left != null) queue.Enqueue(current.Left);
                 if (current.Right != null) queue.Enqueue(current.Right);
@@ -184,6 +289,71 @@ namespace Vault.DataStrucures
             int rightHeight = GetHeightRecursive(node.Right);
             
             return Math.Max(leftHeight, rightHeight) + 1;
+        }
+
+
+        // Count total nodes
+        public int CountNodes()
+        {
+            return CountNodesRecursive(Root);
+        }
+        
+        private int CountNodesRecursive(BinaryTreeNode<T> node)
+        {
+            if (node == null) return 0;
+            
+            int count = 1;
+
+            count += CountNodesRecursive(node.Left);
+            count += CountNodesRecursive(node.Right);
+            
+            return count;
+        }
+
+        public void GenerateNodeDisplayTree()
+        {
+            BinarySearchTree<Vec2> displayTree = new BinarySearchTree<Vec2>();
+            _currentLeaf = 0;//important
+            PostorderTraversal(displayTree.Insert, GetNodeDisplayPosition);
+            Debug.Log("display tree has: " + displayTree.CountNodes() + " nodes with values: " + displayTree.Root.Data);
+
+        }
+
+        public float GetLeafNodeDisplayDistance()
+        {
+            return 100/(int)Math.Pow(2,_levels);
+        }
+
+        public float GetNodeVDisplayDistanceAbsolute(BinaryTreeNode<T> node)
+        {
+            float distance = 0;
+            for(int i = 1; i <= node.Level; i++)
+            {
+                distance += 100/(int)Math.Pow(2,i);
+            }
+            return distance;
+        }
+
+        public Vec2 GetNodeDisplayPosition(BinaryTreeNode<T> node)
+        {
+            return GetNodeDisplayPositionRec(node);
+        }
+
+        private Vec2 GetNodeDisplayPositionRec(BinaryTreeNode<T> node)
+        {
+            if(node.Level == Levels)
+            {
+                _currentLeaf++;
+                return new Vec2((_currentLeaf-1)*GetLeafNodeDisplayDistance(), GetNodeVDisplayDistanceAbsolute(node));
+            }
+
+            else
+            {
+                var leftPos = GetNodeDisplayPosition(node.Left);
+                var rightPos = GetNodeDisplayPosition(node.Right);
+                var middlePos = rightPos - leftPos;
+                return new Vec2(middlePos.X, GetNodeVDisplayDistanceAbsolute(node));
+            }
         }
     }
 }

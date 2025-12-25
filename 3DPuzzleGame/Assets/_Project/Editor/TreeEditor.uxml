@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:UXML
+    xmlns:ui="UnityEngine.UIElements"
+    xmlns:uie="UnityEditor.UIElements">
+
+    <ui:VisualElement class="root">
+        <ui:Label text="My Custom Editor Window"
+                  class="title" />
+
+        <ui:Button name="my-button"
+                   text="Click Me" 
+                   id="mybutton"/>
+
+        <ui:Label name="status-label"
+                  text="Idle..."
+                  class="status" />
+
+        <ui:Image name="logo" />
+    </ui:VisualElement>
+
+</ui:UXML>

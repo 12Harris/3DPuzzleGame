@@ -49,12 +49,12 @@ public class FirstPersonController : MonoBehaviour
     void Start()
     {
         //ToDo: Enqueue method with TQueue as parameter
-        TPriorityQueue<int> queue = new TPriorityQueue<int>();
-        /*queue.Enqueue(0,0);
+        /*TPriorityQueue<int> queue = new TPriorityQueue<int>();
+        queue.Enqueue(0,0);
         queue.Enqueue(1,1);
         queue.Enqueue(2,2);
         queue.Enqueue(3,3);
-        queue.Enqueue(4,4);*/
+        queue.Enqueue(4,4);
 
         queue.Enqueue(0,1,2,3,4);
         queue.Enqueue(5,6,7,8,9);
@@ -71,7 +71,19 @@ public class FirstPersonController : MonoBehaviour
         
         //Queue After
         Debug.Log("Queue After:");
-        Debug.Log(queue);
+        Debug.Log(queue);*/
+
+        BinarySearchTree<int> tree = new BinarySearchTree<int>();
+        tree.Insert(0);
+        tree.Insert(1);
+        tree.Insert(2);
+        tree.Insert(3);
+        tree.Insert(4);
+        tree.Insert(5);
+        
+        Debug.Log("tree has: " + tree.CountNodes() + " nodes");
+        tree.GenerateNodeDisplayTree();
+
     }
 
     void Update()
