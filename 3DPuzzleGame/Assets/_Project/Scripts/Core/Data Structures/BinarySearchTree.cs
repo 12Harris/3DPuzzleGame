@@ -503,15 +503,15 @@ public class Vec2 : IComparable<Vec2>
             else
             {   
                 var temp = (int)Math.Pow(2,level)/2;
-                if(levelIndex < temp)
+                if(levelIndex < temp)//left side
                 {
                     Debug.Log("node is to left");
-                    return new Vec2((levelIndex - (int)Math.Pow(2,level)+1)*GetBottomNodeDisplayDistance(), GetNodeVDisplayDistanceAbsolute(level));
+                    return new Vec2((levelIndex - temp)*GetBottomNodeDisplayDistance(), GetNodeVDisplayDistanceAbsolute(level));
                 }
                 else
                 {
                     Debug.Log("node is to right");
-                    return new Vec2(levelIndex*GetBottomNodeDisplayDistance(), GetNodeVDisplayDistanceAbsolute(level));
+                    return new Vec2((levelIndex - temp+1)*GetBottomNodeDisplayDistance(), GetNodeVDisplayDistanceAbsolute(level));
                 }
             }
         }       
