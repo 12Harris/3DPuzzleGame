@@ -54,14 +54,11 @@ public class Vec2 : IComparable<Vec2>
     //Comparison
     public int CompareTo(Vec2 other)
     {
-        if(X < other.X || Y < other.Y)
-            return-1;
-        
-        else if(X == other.X && Y == other.Y)
-            return 0;
-        
-        else 
+        if(X < other.X)
+            return -1;
+        if(X > other.X)
             return 1;
+        return 0;
     }
 
     // Operators
@@ -245,6 +242,21 @@ public class Vec2 : IComparable<Vec2>
             PreorderRecursive(node.Left, action);
             PreorderRecursive(node.Right, action);
         }
+
+                // Postorder Traversal (Left, Right, Root)
+        public void PreorderTraversal<T2>(Action<T2> action, Func<BinaryTreeNode<T>,T2> func)
+        {
+            PreorderRecursive(Root, action, func);
+        }
+        
+
+        private void PreorderRecursive<T2>(BinaryTreeNode<T> node, Action<T2> action, Func<BinaryTreeNode<T>,T2> func)
+        {
+            if (node == null) return;
+            action(func(node));
+            PreorderRecursive(node.Left, action, func);
+            PreorderRecursive(node.Right, action, func);
+        }
         
         // Postorder Traversal (Left, Right, Root)
         public void PostorderTraversal(Action<T> action)
@@ -287,6 +299,9 @@ public class Vec2 : IComparable<Vec2>
             _levels = 0;
             var nodesOnLevel = 1;
             var countedNodesOnLevel = 0;
+            var nullNodes = 0;
+            var totalNodes = CountNodes();
+            var totalNodesCounted = 0;
             while (queue.Count > 0)
             {
                 BinaryTreeNode<T> current = queue.Dequeue();
@@ -295,31 +310,35 @@ public class Vec2 : IComparable<Vec2>
                 if(current != null)
                 {
                     current.Level = _levels;
-                    Debug.Log("current.level: " + current.Level);
+                    Debug.Log("current.level: " + current.Level + "(" + current.Data + ")");
                     if(action != null) action(current.Data);
                     countedNodesOnLevel++;
-                    if(countedNodesOnLevel== nodesOnLevel)
+                    totalNodesCounted++;
+                    Debug.Log("Current data = " + current.Data + ", countedNodes = " + countedNodesOnLevel + ", nodesonlevel = " + nodesOnLevel);
+                    if(countedNodesOnLevel == nodesOnLevel && totalNodesCounted < totalNodes)//countedNodesOnLevel+nullNodes=4, nodesonlevel = 3
                     {
+                        Debug.Log("Nodes On Level " + _levels + ": " + nodesOnLevel);
                         _levels++;
                         countedNodesOnLevel = 0;
-                        nodesOnLevel = (int)Math.Pow(2,_levels);
-                        Debug.Log("nodes on level: " + nodesOnLevel);
+                        nodesOnLevel = (int)Math.Pow(2,_levels)-nullNodes*2;
+                        nullNodes = 0;
+                        //Debug.Log("nodes on level: " + nodesOnLevel);
                     }
+    
+                    if(totalNodesCounted < totalNodes)queue.Enqueue(current.Left);
+                    if(totalNodesCounted < totalNodes)queue.Enqueue(current.Right);
                     
-                    /*if (current.Left != null) queue.Enqueue(current.Left);
-                    else countedNodesOnLevel++;
-                    if (current.Right != null) queue.Enqueue(current.Right);
-                    else countedNodesOnLevel++;*/
-                    queue.Enqueue(current.Left);
-                    queue.Enqueue(current.Right);
+                    
                 }
                 else
                 {
+                    if(_levels == 2)
+                        Debug.Log("Null node found on level 2???");
                     nodesOnLevel--;
+                    nullNodes++;
                 }   
             }
-            //_levels--;
-            Debug.Log("levels total: " + _levels);
+            Debug.Log("levels total: " + _levels + "node count: "+ totalNodes);
         }
         
         public int GetHeight()
@@ -360,7 +379,7 @@ public class Vec2 : IComparable<Vec2>
         public List<BinaryTreeNode<T>> GetNodesAtLevel(BinaryTreeNode<T> root,int targetLevel)
         {
             var result = new List<BinaryTreeNode<T>>();
-            Collect(root, 0, 2, result);
+            Collect(root, 0, targetLevel, result);
             return result;  
         }
 
@@ -389,7 +408,7 @@ public class Vec2 : IComparable<Vec2>
         {
             BinarySearchTree<Vec2> displayTree = new BinarySearchTree<Vec2>();
             _currentLeaf = 0;//important
-            PostorderTraversal(displayTree.Insert, GetNodeDisplayPosition);
+            PreorderTraversal(displayTree.Insert, GetNodeDisplayPosition);
             Debug.Log("display tree has: " + displayTree.CountNodes() + " nodes with values: " + displayTree.Root.Data);
             return displayTree;
 
@@ -397,15 +416,15 @@ public class Vec2 : IComparable<Vec2>
 
         public float GetBottomNodeDisplayDistance()
         {
-            return 100/(int)Math.Pow(2,_levels);
+            return 200/(int)Math.Pow(2,_levels);
         }
 
         public float GetNodeVDisplayDistanceAbsolute(int level)
         {
             float distance = 0;
-            for(int i = 1; i < level; i++)
+            for(int i = 1; i <= level; i++)
             {
-                distance += 100/(int)Math.Pow(2,i);
+                distance += (200+level*40)/(int)Math.Pow(2,i);//level 1:50, level 2: 75
             }
             return distance;
         }
@@ -413,7 +432,7 @@ public class Vec2 : IComparable<Vec2>
         public Vec2 GetNodeDisplayPosition(BinaryTreeNode<T> node)
         {   
             Debug.Log("node level: " + node.Level);
-            return GetNodeDisplayPositionRec(node);
+            return GetNodeDisplayPositionRec(node) + new Vec2(200,0);
         }
 
         private Vec2 GetNodeDisplayPositionRec(BinaryTreeNode<T> node)
@@ -439,7 +458,21 @@ public class Vec2 : IComparable<Vec2>
                 else    
                     rightPos = GetNodeDisplayPositionRec(node.Right);
 
-                var middlePos = rightPos - leftPos;
+                Vec2 middlePos = Vec2.Zero;
+
+                if(leftPos.X > 0)
+                    middlePos = leftPos + (rightPos-leftPos)/2;
+                else
+                {
+                    if(rightPos.X < 0)
+                        middlePos = leftPos - (leftPos-rightPos)/2;
+                    else
+                        middlePos = leftPos+rightPos;
+                }
+                
+                Debug.Log("AAleftpos: " + leftPos.X);
+                Debug.Log("AA rightpos " + rightPos.X);
+                Debug.Log("AA middlepos x (no leaf): " + middlePos.X);
                 return new Vec2(middlePos.X, GetNodeVDisplayDistanceAbsolute(node.Level));
             }
         }
@@ -451,12 +484,35 @@ public class Vec2 : IComparable<Vec2>
             {
                 var leftPos = GetNodeDisplayPositionRec(level+1,levelIndex*2);
                 var rightPos = GetNodeDisplayPositionRec(level+1, levelIndex*2+1);
-                var middlePos = rightPos - leftPos;
+                Vec2 middlePos = Vec2.Zero;
+
+                if(leftPos.X > 0)
+                    middlePos = leftPos + (rightPos-leftPos)/2;
+                else
+                {
+                    if(rightPos.X < 0)
+                        middlePos = leftPos - (leftPos-rightPos)/2;
+                    else
+                        middlePos = leftPos+rightPos;
+                }
+                
+
+                Debug.Log("middlepos x: " + middlePos.X);
                 return new Vec2(middlePos.X, GetNodeVDisplayDistanceAbsolute(level));
             }
             else
-            {
-                return new Vec2(levelIndex*GetBottomNodeDisplayDistance(), GetNodeVDisplayDistanceAbsolute(level));
+            {   
+                var temp = (int)Math.Pow(2,level)/2;
+                if(levelIndex < temp)
+                {
+                    Debug.Log("node is to left");
+                    return new Vec2((levelIndex - (int)Math.Pow(2,level)+1)*GetBottomNodeDisplayDistance(), GetNodeVDisplayDistanceAbsolute(level));
+                }
+                else
+                {
+                    Debug.Log("node is to right");
+                    return new Vec2(levelIndex*GetBottomNodeDisplayDistance(), GetNodeVDisplayDistanceAbsolute(level));
+                }
             }
         }       
 

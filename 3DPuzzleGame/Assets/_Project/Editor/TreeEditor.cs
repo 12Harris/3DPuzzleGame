@@ -23,13 +23,23 @@ public class TreEditorWindow : EditorWindow
     public void CreateGUI()
     {
         //Create Test Tree
-        tree.Insert(5);
+        tree.Insert(7);
+        tree.Insert(4);
+        tree.Insert(10);
+        tree.Insert(9);
+        tree.Insert(11);
+        tree.Insert(3);
+        tree.Insert(6);
+
+        /*tree.Insert(5);
         tree.Insert(4);
         tree.Insert(8);
         tree.Insert(3);
         tree.Insert(6);
-        tree.Insert(7);
         tree.Insert(9);
+        tree.Insert(7);*/
+
+
         tree.LevelOrderTraversal(null);
         
         tree.PrintTree();
@@ -46,6 +56,9 @@ public class TreEditorWindow : EditorWindow
         }
 
         displayTree = tree.GenerateNodeDisplayTree();
+        displayTree.LevelOrderTraversal(null);  
+        displayTree.PrintTree();
+        Debug.Log("display tree count: " + displayTree.CountNodes() + ", levels: " + displayTree.Levels);
 
         // Load UXML
         VisualTreeAsset visualTree =
@@ -84,7 +97,7 @@ public class TreEditorWindow : EditorWindow
     public void CreateTreeUI()
     {
         var container = rootVisualElement.Q<VisualElement>("tree-container");
-        for(int i = 0; i <= tree.Levels; i++)
+        for(int i = 0; i <= displayTree.Levels; i++)
         {
             var treeLevel = CreateTreeLevel(i);
             container.Add(treeLevel);
@@ -98,7 +111,10 @@ public class TreEditorWindow : EditorWindow
         treeLevel.name ="tree-level";
         treeLevel.AddToClassList("tree-level");
 
+        string temp = "ui tree level: " + level + "\n";
+
         var nodes =  displayTree.GetNodesAtLevel(displayTree.Root, level);
+        Debug.Log("nodes level " + level + " count: " + nodes.Count);
 
         for(int i = 0; i < nodes.Count; i++)
         {
@@ -109,9 +125,12 @@ public class TreEditorWindow : EditorWindow
             };
             img.style.position = Position.Absolute;
             img.style.left = nodes[i].Data.X;
-            img.style.right = nodes[i].Data.Y;
+            img.style.top = nodes[i].Data.Y;
+
+            temp += nodes[i].Data.X + ", " + nodes[i].Data.Y;
             treeLevel.Add(img);
         }
+        Debug.Log(temp);
         return treeLevel;
     }
 }
