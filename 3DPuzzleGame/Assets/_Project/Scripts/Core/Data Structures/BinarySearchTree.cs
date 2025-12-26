@@ -322,10 +322,8 @@ public class Vec2 : IComparable<Vec2>
                         Debug.Log("Nodes On Level " + _levels + ": " + nodesOnLevel);
                         _levels++;
                         countedNodesOnLevel = 0;
-                        //nodesOnLevel = (int)Math.Pow(2,_levels)-nullNodes*2;
                         nodesOnLevel = (int)Math.Pow(2,_levels);
                         nullNodes = 0;
-                        //Debug.Log("nodes on level: " + nodesOnLevel);
                     }
     
                     if(totalNodesCounted < totalNodes)queue.Enqueue(current.Left);
