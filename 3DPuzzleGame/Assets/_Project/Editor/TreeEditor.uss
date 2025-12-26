@@ -18,13 +18,13 @@
     gap: 8px;
 }
 
-.tree-level {
+/*.tree-level {
     flex-direction: row;
     gap: 8px;
 
     align-items: center;
     justify-content: flex-start;
-}
+}*/
 
 /*.image-row {
     flex-direction: row;

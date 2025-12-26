@@ -1,8 +1,10 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Tracing;
 using System.Linq;
 using System.Security.Cryptography;
+using Unity.Multiplayer.Center.Common;
 using Unity.VisualScripting;
 using UnityEngine;
 namespace Vault.DataStrucures
@@ -86,7 +88,24 @@ public class Vec2 : IComparable<Vec2>
         public T Data { get; set; }
         public BinaryTreeNode<T> Left { get; set; }
         public BinaryTreeNode<T> Right { get; set; }
-        public int Level {get;} = 0;
+        public int Level {get;set;} = 0;
+        public int LevelIndex{get;private set;}
+        public BinaryTreeNode<T> Parent{get;set;} = null;
+
+        public void GetLevelIndex()
+        {
+            if(Parent == null)
+            {
+                LevelIndex = 0;
+            }
+            else
+            {
+                if(this == Parent.Left)
+                    LevelIndex = Parent.LevelIndex*2;
+                else
+                    LevelIndex = Parent.LevelIndex*2+1;
+            }
+        }
         
         public BinaryTreeNode(T data)
         {
@@ -96,6 +115,8 @@ public class Vec2 : IComparable<Vec2>
         }
         
         public bool IsLeaf => Left == null && Right == null;
+
+        public int LeafIndex = -1;
     }
 
     // ===============================================================
@@ -123,9 +144,17 @@ public class Vec2 : IComparable<Vec2>
             int comparison = data.CompareTo(node.Data);
             
             if (comparison < 0)
+            {
                 node.Left = InsertRecursive(node.Left, data);
+                node.Left.Parent = node;
+                node.Left.GetLevelIndex();
+            }
             else if (comparison > 0)
+            {
                 node.Right = InsertRecursive(node.Right, data);
+                node.Right.Parent = node;
+                node.Right.GetLevelIndex();
+            }
             
             return node;
         }
@@ -258,23 +287,39 @@ public class Vec2 : IComparable<Vec2>
             _levels = 0;
             var nodesOnLevel = 1;
             var countedNodesOnLevel = 0;
-            
             while (queue.Count > 0)
             {
                 BinaryTreeNode<T> current = queue.Dequeue();
-                if(action != null) action(current.Data);
-                countedNodesOnLevel++;
-
-                if(countedNodesOnLevel== nodesOnLevel)
-                {
-                    _levels++;
-                    countedNodesOnLevel = 0;
-                    nodesOnLevel = (int)Math.Pow(2,_levels);
-                }
                 
-                if (current.Left != null) queue.Enqueue(current.Left);
-                if (current.Right != null) queue.Enqueue(current.Right);
+
+                if(current != null)
+                {
+                    current.Level = _levels;
+                    Debug.Log("current.level: " + current.Level);
+                    if(action != null) action(current.Data);
+                    countedNodesOnLevel++;
+                    if(countedNodesOnLevel== nodesOnLevel)
+                    {
+                        _levels++;
+                        countedNodesOnLevel = 0;
+                        nodesOnLevel = (int)Math.Pow(2,_levels);
+                        Debug.Log("nodes on level: " + nodesOnLevel);
+                    }
+                    
+                    /*if (current.Left != null) queue.Enqueue(current.Left);
+                    else countedNodesOnLevel++;
+                    if (current.Right != null) queue.Enqueue(current.Right);
+                    else countedNodesOnLevel++;*/
+                    queue.Enqueue(current.Left);
+                    queue.Enqueue(current.Right);
+                }
+                else
+                {
+                    nodesOnLevel--;
+                }   
             }
+            //_levels--;
+            Debug.Log("levels total: " + _levels);
         }
         
         public int GetHeight()
@@ -311,24 +356,54 @@ public class Vec2 : IComparable<Vec2>
             return count;
         }
 
-        public void GenerateNodeDisplayTree()
+
+        public List<BinaryTreeNode<T>> GetNodesAtLevel(BinaryTreeNode<T> root,int targetLevel)
+        {
+            var result = new List<BinaryTreeNode<T>>();
+            Collect(root, 0, 2, result);
+            return result;  
+        }
+
+        private void Collect(BinaryTreeNode<T> node,int currentLevel,int targetLevel, List<BinaryTreeNode<T>> result)
+        {
+            if (node == null)
+                return;
+
+            if (currentLevel == targetLevel)
+            {
+                result.Add(node);
+                Debug.Log("adding node to collection!" + node.Data);
+                return;
+            }
+
+            Collect(node.Left, currentLevel + 1, targetLevel, result);
+            if(result.Count > 0) Debug.Log("checked left tree of level " + node.Level  + " node");
+            Collect(node.Right, currentLevel + 1, targetLevel,  result);
+            if(result.Count > 0) Debug.Log("checked right tree of level " + node.Level  + " node");
+
+     
+        }
+
+
+        public BinarySearchTree<Vec2> GenerateNodeDisplayTree()
         {
             BinarySearchTree<Vec2> displayTree = new BinarySearchTree<Vec2>();
             _currentLeaf = 0;//important
             PostorderTraversal(displayTree.Insert, GetNodeDisplayPosition);
             Debug.Log("display tree has: " + displayTree.CountNodes() + " nodes with values: " + displayTree.Root.Data);
+            return displayTree;
 
         }
 
-        public float GetLeafNodeDisplayDistance()
+        public float GetBottomNodeDisplayDistance()
         {
             return 100/(int)Math.Pow(2,_levels);
         }
 
-        public float GetNodeVDisplayDistanceAbsolute(BinaryTreeNode<T> node)
+        public float GetNodeVDisplayDistanceAbsolute(int level)
         {
             float distance = 0;
-            for(int i = 1; i <= node.Level; i++)
+            for(int i = 1; i < level; i++)
             {
                 distance += 100/(int)Math.Pow(2,i);
             }
@@ -336,25 +411,85 @@ public class Vec2 : IComparable<Vec2>
         }
 
         public Vec2 GetNodeDisplayPosition(BinaryTreeNode<T> node)
-        {
+        {   
+            Debug.Log("node level: " + node.Level);
             return GetNodeDisplayPositionRec(node);
         }
 
         private Vec2 GetNodeDisplayPositionRec(BinaryTreeNode<T> node)
         {
-            if(node.Level == Levels)
+
+            if(node.IsLeaf)
             {
-                _currentLeaf++;
-                return new Vec2((_currentLeaf-1)*GetLeafNodeDisplayDistance(), GetNodeVDisplayDistanceAbsolute(node));
+                return  GetNodeDisplayPositionRec(node.Level, node.LevelIndex);
             }
 
             else
             {
-                var leftPos = GetNodeDisplayPosition(node.Left);
-                var rightPos = GetNodeDisplayPosition(node.Right);
+                Vec2 leftPos = Vec2.Zero;
+                Vec2 rightPos = Vec2.Zero;
+
+                if(node.Left == null)
+                    leftPos = GetNodeDisplayPositionRec(node.Level+1, node.LevelIndex*2);
+                else    
+                    leftPos = GetNodeDisplayPositionRec(node.Left);
+
+                if(node.Right == null)
+                    rightPos = GetNodeDisplayPositionRec(node.Level+1, node.LevelIndex*2+1);
+                else    
+                    rightPos = GetNodeDisplayPositionRec(node.Right);
+
                 var middlePos = rightPos - leftPos;
-                return new Vec2(middlePos.X, GetNodeVDisplayDistanceAbsolute(node));
+                return new Vec2(middlePos.X, GetNodeVDisplayDistanceAbsolute(node.Level));
             }
+        }
+
+        //Called only for leaf nodes
+        private Vec2 GetNodeDisplayPositionRec(int level, int levelIndex)
+        {
+            if(level < _levels)
+            {
+                var leftPos = GetNodeDisplayPositionRec(level+1,levelIndex*2);
+                var rightPos = GetNodeDisplayPositionRec(level+1, levelIndex*2+1);
+                var middlePos = rightPos - leftPos;
+                return new Vec2(middlePos.X, GetNodeVDisplayDistanceAbsolute(level));
+            }
+            else
+            {
+                return new Vec2(levelIndex*GetBottomNodeDisplayDistance(), GetNodeVDisplayDistanceAbsolute(level));
+            }
+        }       
+
+        // Print tree structure
+        public void PrintTree()
+        {
+            PrintTreeRecursive(Root, "", true);
+        }
+        
+        private void PrintTreeRecursive(BinaryTreeNode<T> node, string indent, bool last)
+        {
+            if (node == null) return;
+
+            string result = "";
+            
+            result+=indent;
+            if (last)
+            {
+                result+= "└─";
+                result+= "  ";
+            }
+            else
+            {
+                result+= "├─";
+                result+= "│ ";
+            }
+            
+            result += node.Data + "Level: " + node.Level +"\n";
+            Debug.Log(result);
+            
+            
+            PrintTreeRecursive(node.Left, indent, false);
+            PrintTreeRecursive(node.Right, indent, true);
         }
     }
 }

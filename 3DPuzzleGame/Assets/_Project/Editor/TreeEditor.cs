@@ -11,28 +11,42 @@ public class TreEditorWindow : EditorWindow
     private const string UssPath  = "Assets/_Project/Editor//TreeEditor.uss";
     private static Texture2D treeNodeIcon;
     private BinarySearchTree<int> tree = new BinarySearchTree<int>();
-
+    private BinarySearchTree<Vec2> displayTree;
 
     [MenuItem("Tools/Tree Editor")]
     public static void ShowWindow()
     {
         TreEditorWindow wnd = GetWindow<TreEditorWindow>();
         wnd.titleContent = new GUIContent("Tree Editor Window");
-
     }
 
     public void CreateGUI()
     {
         //Create Test Tree
-        tree.Insert(0);
-        tree.Insert(1);
-        tree.Insert(2);
-        tree.Insert(3);
-        tree.Insert(4);
         tree.Insert(5);
-
+        tree.Insert(4);
+        tree.Insert(8);
+        tree.Insert(3);
+        tree.Insert(6);
+        tree.Insert(7);
+        tree.Insert(9);
         tree.LevelOrderTraversal(null);
         
+        tree.PrintTree();
+
+        //Assign leaf indices to leaf nodes
+        var leafNodes = tree.GetNodesAtLevel(tree.Root, tree.Levels);
+        int leafIndex = 0;
+        Debug.Log("leaf nodes count: " + leafNodes.Count);
+        foreach(var leafNode in leafNodes)
+        {
+            Debug.Log("leaf node: " + leafNode.Data);
+            leafNode.LeafIndex = leafIndex;
+            leafIndex++;
+        }
+
+        displayTree = tree.GenerateNodeDisplayTree();
+
         // Load UXML
         VisualTreeAsset visualTree =
             AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(UxmlPath);
@@ -84,14 +98,18 @@ public class TreEditorWindow : EditorWindow
         treeLevel.name ="tree-level";
         treeLevel.AddToClassList("tree-level");
 
-        for(int i = 0; i < (int)Math.Pow(2,level); i++)
+        var nodes =  displayTree.GetNodesAtLevel(displayTree.Root, level);
+
+        for(int i = 0; i < nodes.Count; i++)
         {
-            Debug.Log("I is: " + i);
             var img = new Image
             {
                 image = treeNodeIcon,
                 scaleMode = ScaleMode.ScaleToFit
             };
+            img.style.position = Position.Absolute;
+            img.style.left = nodes[i].Data.X;
+            img.style.right = nodes[i].Data.Y;
             treeLevel.Add(img);
         }
         return treeLevel;

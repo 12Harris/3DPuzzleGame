@@ -80,6 +80,7 @@ public class FirstPersonController : MonoBehaviour
         tree.Insert(3);
         tree.Insert(4);
         tree.Insert(5);
+        tree.Insert(6);
         
         Debug.Log("tree has: " + tree.CountNodes() + " nodes");
         tree.GenerateNodeDisplayTree();
