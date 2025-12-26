@@ -24,7 +24,7 @@
 
     align-items: center;
     justify-content: flex-start;
-}*/
+}
 
 /*.image-row {
     flex-direction: row;
@@ -47,6 +47,11 @@
     border-radius: 8px;
 }
 
+.tree-level Label {
+    width: 64px;
+    height: 64px;
+    border-radius: 8px;
+}
 /*.treenode:hover {
     background-color: rgba(255, 255, 255, 0.1);
 }

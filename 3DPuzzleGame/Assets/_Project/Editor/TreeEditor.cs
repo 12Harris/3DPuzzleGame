@@ -1,4 +1,5 @@
 using System;
+using Mono.Cecil.Cil;
 using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
@@ -23,13 +24,13 @@ public class TreEditorWindow : EditorWindow
     public void CreateGUI()
     {
         //Create Test Tree
-        tree.Insert(7);
+        /*tree.Insert(7);
         tree.Insert(4);
         tree.Insert(10);
         tree.Insert(9);
         tree.Insert(11);
         tree.Insert(3);
-        tree.Insert(6);
+        tree.Insert(6);*/
 
         /*tree.Insert(5);
         tree.Insert(4);
@@ -39,6 +40,12 @@ public class TreEditorWindow : EditorWindow
         tree.Insert(9);
         tree.Insert(7);*/
 
+        tree.Insert(1);
+        tree.Insert(2);
+        tree.Insert(3);
+        tree.Insert(4);
+        tree.Insert(5);
+        tree.Insert(6);
 
         tree.LevelOrderTraversal(null);
         
@@ -111,26 +118,34 @@ public class TreEditorWindow : EditorWindow
         treeLevel.name ="tree-level";
         treeLevel.AddToClassList("tree-level");
 
-        string temp = "ui tree level: " + level + "\n";
-
         var nodes =  displayTree.GetNodesAtLevel(displayTree.Root, level);
-        Debug.Log("nodes level " + level + " count: " + nodes.Count);
+        var nodesInfo = tree.GetNodesAtLevel(tree.Root, level);
 
         for(int i = 0; i < nodes.Count; i++)
         {
             var img = new Image
             {
                 image = treeNodeIcon,
+
                 scaleMode = ScaleMode.ScaleToFit
             };
+
             img.style.position = Position.Absolute;
             img.style.left = nodes[i].Data.X;
             img.style.top = nodes[i].Data.Y;
-
-            temp += nodes[i].Data.X + ", " + nodes[i].Data.Y;
             treeLevel.Add(img);
+
+            //add label with node info
+            var label = new Label(nodesInfo[i].Data.ToString());
+            label.style.fontSize = 20;
+            label.style.color = Color.black;
+            label.style.position = Position.Absolute;
+            label.style.left = nodes[i].Data.X;
+            label.style.top = nodes[i].Data.Y;
+            
+            treeLevel.Add(label);
         }
-        Debug.Log(temp);
+
         return treeLevel;
     }
 }

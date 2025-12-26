@@ -142,12 +142,14 @@ public class Vec2 : IComparable<Vec2>
             
             if (comparison < 0)
             {
+                Debug.Log(data +  " < "  + node.Data);
                 node.Left = InsertRecursive(node.Left, data);
                 node.Left.Parent = node;
                 node.Left.GetLevelIndex();
             }
             else if (comparison > 0)
             {
+                Debug.Log(data +  " > "  + node.Data);
                 node.Right = InsertRecursive(node.Right, data);
                 node.Right.Parent = node;
                 node.Right.GetLevelIndex();
@@ -320,7 +322,8 @@ public class Vec2 : IComparable<Vec2>
                         Debug.Log("Nodes On Level " + _levels + ": " + nodesOnLevel);
                         _levels++;
                         countedNodesOnLevel = 0;
-                        nodesOnLevel = (int)Math.Pow(2,_levels)-nullNodes*2;
+                        //nodesOnLevel = (int)Math.Pow(2,_levels)-nullNodes*2;
+                        nodesOnLevel = (int)Math.Pow(2,_levels);
                         nullNodes = 0;
                         //Debug.Log("nodes on level: " + nodesOnLevel);
                     }
@@ -332,10 +335,10 @@ public class Vec2 : IComparable<Vec2>
                 }
                 else
                 {
-                    if(_levels == 2)
-                        Debug.Log("Null node found on level 2???");
                     nodesOnLevel--;
                     nullNodes++;
+                    if(totalNodesCounted < totalNodes)queue.Enqueue(null);
+                    if(totalNodesCounted < totalNodes)queue.Enqueue(null);
                 }   
             }
             Debug.Log("levels total: " + _levels + "node count: "+ totalNodes);
@@ -416,7 +419,7 @@ public class Vec2 : IComparable<Vec2>
 
         public float GetBottomNodeDisplayDistance()
         {
-            return 200/(int)Math.Pow(2,_levels);
+            return 500/(int)Math.Pow(2,_levels);
         }
 
         public float GetNodeVDisplayDistanceAbsolute(int level)
@@ -424,7 +427,7 @@ public class Vec2 : IComparable<Vec2>
             float distance = 0;
             for(int i = 1; i <= level; i++)
             {
-                distance += (200+level*40)/(int)Math.Pow(2,i);//level 1:50, level 2: 75
+                distance += (300+level*70)/(int)Math.Pow(2,i);//level 1:50, level 2: 75
             }
             return distance;
         }
