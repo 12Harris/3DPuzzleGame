@@ -1,6 +1,8 @@
 using System;
 using System.Threading;
+using JetBrains.Annotations;
 using Mono.Cecil.Cil;
+using NUnit.Framework.Constraints;
 using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
@@ -11,6 +13,35 @@ public class VisualElementWrapper : IComparable<VisualElementWrapper>
 {
     private VisualElement _visualElement;
     public VisualElement VisualElement => _visualElement;
+
+    private bool _enable = true;
+
+    public bool Enabled => _enable;
+
+    public void ToggleEnable()
+    {
+        Enable(!_enable);
+    }
+
+    public void Enable(bool enable)
+    {
+        _enable = enable;
+        _visualElement.Q<VisualElement>("vsubtree-label").style.display = DisplayStyle.Flex;
+        _visualElement.Q<VisualElement>("vertical-line").style.display = _enable? DisplayStyle.Flex : DisplayStyle.None;
+
+        if(_visualElement.Q<VisualElement>("parent-connection") !=  null)
+            _visualElement.Q<VisualElement>("parent-connection").style.display = DisplayStyle.Flex;
+
+    }
+
+    public void Hide()
+    {
+        _visualElement.Q<VisualElement>("vsubtree-label").style.display = DisplayStyle.None;
+        _visualElement.Q<VisualElement>("vertical-line").style.display = DisplayStyle.None;
+        _visualElement.Q<VisualElement>("parent-connection").style.display = DisplayStyle.None;
+
+    }
+
     public VisualElementWrapper(VisualElement visualElement)
     {
         _visualElement = visualElement;
@@ -50,6 +81,8 @@ public class TreEditorWindow : EditorWindow
     private BinarySearchTree<Vec2> displayTree;
 
     private BinarySearchTree<VisualElementWrapper> _testTree = new BinarySearchTree<VisualElementWrapper>();
+    
+    BinaryTreeNode<VisualElementWrapper> _selectedNode = null;
 
     private float _hierarchyYOffset = 0;
 
@@ -145,6 +178,74 @@ public class TreEditorWindow : EditorWindow
 
         ReparentHierarchyNodes(_testTree.Root);
 
+        RegisterClickEvents(_testTree.Root);
+
+    }
+
+    public void RegisterClickEvents(BinaryTreeNode<VisualElementWrapper> node)
+    {
+        
+        node.Data.VisualElement.Q<VisualElement>("vsubtree-label").RegisterCallback<ClickEvent>(_ =>
+        {
+            Debug.Log("Mouse clicked " + node.Data.VisualElement);
+            OnClickVisualSubTree(node);
+        });
+        if(node.Left != null)
+            RegisterClickEvents(node.Left);
+        if(node.Right != null)
+            RegisterClickEvents(node.Right);
+    }
+
+    private void OnClickVisualSubTree(BinaryTreeNode<VisualElementWrapper> node)
+    {   
+        _selectedNode = node;
+        node.Data.ToggleEnable();
+        EnableDisableVisualSubTrees(_testTree.Root);
+    }
+
+    private void EnableDisableVisualSubTrees(BinaryTreeNode<VisualElementWrapper> node)
+    { 
+        
+        EnableDisableVisualSubTreesRec(node);  
+
+    }
+
+    private void EnableDisableVisualSubTreesRec( BinaryTreeNode<VisualElementWrapper> node)
+    {
+        if(node == null)
+            return;
+
+        if(node.Data.Enabled)
+        {
+            if(node.Left != null)
+            {
+                node.Left.Data.Enable(node.Left.Data.Enabled);
+                EnableDisableVisualSubTreesRec( node.Left);
+                
+                
+            }
+            if(node.Right != null)
+            {
+                node.Right.Data.Enable(node.Right.Data.Enabled);
+                EnableDisableVisualSubTreesRec( node.Right);
+            }
+        }
+        else
+        {
+            Debug.Log("hiding subtrees!");
+            HideVisualSubTreeRec(node.Left);
+            HideVisualSubTreeRec(node.Right);
+        }
+    }
+
+    public void HideVisualSubTreeRec( BinaryTreeNode<VisualElementWrapper> node)
+    {
+        if(node != null)
+        {
+            node.Data.Hide();
+            HideVisualSubTreeRec(node.Left);
+            HideVisualSubTreeRec(node.Right);
+        }
     }
 
     public VisualElementWrapper NewVisualSubTree(BinaryTreeNode<int> node)
@@ -155,14 +256,15 @@ public class TreEditorWindow : EditorWindow
 
         var label = new Label
         {
+            name = "vsubtree-label",
             text = node.Data.ToString(),
             
         };
 
         label.style.position = Position.Absolute;
-        label.style.left = node.Level*20;
+        label.style.left = node.Level*20+5;
         _hierarchyYOffset+=25;
-        label.style.top = _hierarchyYOffset;
+        label.style.top = _hierarchyYOffset-5;
 
         subTree.Add(label);
 
@@ -176,6 +278,7 @@ public class TreEditorWindow : EditorWindow
             lineHeight -= (tree.CountNodes(node.Left)-1)*25;
 
         var line = new VisualElement();
+        line.name = "vertical-line";
         line.style.position = Position.Absolute;
         line.style.height = lineHeight;
         line.style.backgroundColor = Color.black;
@@ -185,9 +288,10 @@ public class TreEditorWindow : EditorWindow
 
         subTree.Add(line);
 
-        if(node.Parent != null)
+        if(node.Parent != null)//draw connection to parent node(each child node has single connection to parent node)
         {
             var line2 = new VisualElement();
+            line2.name = "parent-connection";
             line2.style.position = Position.Absolute;
             line2.style.height = 2;
             line2.style.backgroundColor = Color.black;
