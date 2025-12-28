@@ -16,7 +16,9 @@
                   class="status" />
 
 
-        <ui:VisualElement name="tree-container" class="tree-container">
+        <!--<ui:VisualElement name="tree-hierarchy-container" class="tree-hierarchy-container"></ui:VisualElement>-->
+        <ui:VisualElement name="tree-container" class="tree-container"> </ui:VisualElement>
+        <ui:VisualElement name="binarytreenodeinsp" class="binarytreenodeinsp">
         </ui:VisualElement>
         
     </ui:VisualElement>

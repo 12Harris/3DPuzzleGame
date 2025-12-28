@@ -14,8 +14,24 @@
 }
 
 .tree-container {
+    margin-top: 50px;
+    margin-left: 200px;
     flex-direction: column;
     gap: 8px;
+}
+
+.tree-hierarchy-container {
+    /*flex-direction: row;
+    gap: 8px;*/
+}
+
+.binarytreenodeinsp
+{
+    margin-left: 500px;
+}
+
+.line {
+    background-color: #000000ff;
 }
 
 /*.tree-level {

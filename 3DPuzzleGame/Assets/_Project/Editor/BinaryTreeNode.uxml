@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:UXML xmlns:ui="UnityEngine.UIElements"
+         xmlns:uie="UnityEditor.UIElements">
+
+    <ui:VisualElement class="root">
+        <uie:PropertyField name="nodeField" binding-path="_node" />
+    </ui:VisualElement>
+
+</ui:UXML>

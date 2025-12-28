@@ -13,7 +13,6 @@ namespace Vault.DataStrucures
 // ===============================================================
 // Vec2 structure
 // ===============================================================
-
 public class Vec2 : IComparable<Vec2>
 {
     public float X;
@@ -80,11 +79,22 @@ public class Vec2 : IComparable<Vec2>
     // ===============================================================
     // Binary Tree Node
     // ===============================================================
+
+    [System.Serializable]
     public class BinaryTreeNode<T>
     {
-        public T Data { get; set; }
-        public BinaryTreeNode<T> Left { get; set; }
-        public BinaryTreeNode<T> Right { get; set; }
+        [SerializeField]
+        private T _data;
+        public T Data { get => _data; set => _data=value; }
+
+
+        [SerializeField] private BinaryTreeNode<T> _left;
+
+        [SerializeField] private BinaryTreeNode<T> _right;
+
+        
+        public BinaryTreeNode<T> Left { get=>_left; set=>_left=value; }
+        public BinaryTreeNode<T> Right { get=>_right; set=>_right=value; }
         public int Level {get;set;} = 0;
         public int LevelIndex{get;private set;}
         public BinaryTreeNode<T> Parent{get;set;} = null;
@@ -113,12 +123,14 @@ public class Vec2 : IComparable<Vec2>
         
         public bool IsLeaf => Left == null && Right == null;
 
+        [HideInInspector]
         public int LeafIndex = -1;
     }
 
     // ===============================================================
     // Binary Search Tree
     // ===============================================================
+    [System.Serializable]
     public class BinarySearchTree<T> where T : IComparable<T>
     {
         public BinaryTreeNode<T> Root { get; private set; }
@@ -364,6 +376,13 @@ public class Vec2 : IComparable<Vec2>
             return CountNodesRecursive(Root);
         }
         
+
+        // Count total nodes of subTree
+        public int CountNodes(BinaryTreeNode<T> node)
+        {
+            return CountNodesRecursive(node);
+        }
+        
         private int CountNodesRecursive(BinaryTreeNode<T> node)
         {
             if (node == null) return 0;
@@ -433,7 +452,7 @@ public class Vec2 : IComparable<Vec2>
         public Vec2 GetNodeDisplayPosition(BinaryTreeNode<T> node)
         {   
             Debug.Log("node level: " + node.Level);
-            return GetNodeDisplayPositionRec(node) + new Vec2(200,0);
+            return GetNodeDisplayPositionRec(node) + new Vec2(300,0);
         }
 
         private Vec2 GetNodeDisplayPositionRec(BinaryTreeNode<T> node)
