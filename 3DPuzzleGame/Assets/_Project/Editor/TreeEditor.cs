@@ -1,15 +1,92 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using JetBrains.Annotations;
 using Mono.Cecil.Cil;
 using NUnit.Framework.Constraints;
+using PlasticGui.WorkspaceWindow;
 using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
 using Vault.DataStrucures;
 
-public class VisualElementWrapper : IComparable<VisualElementWrapper>
+
+public sealed class GraphNodeWrapper : VisualElementWrapper
+{
+    public int Level{get;set;} = 0;
+    public int LevelIndex{get;set;} = 0;
+    public GraphNodeWrapper(VisualElement visualElement) : base(visualElement)
+    {
+        
+    }
+
+    public override int CompareTo(VisualElementWrapper other)
+    {
+        return -1;
+    }
+
+}
+
+public sealed class HierarchyWrapper : VisualElementWrapper
+{
+    public HierarchyWrapper(VisualElement visualElement) : base(visualElement){}
+
+    public override  void ToggleEnable(bool isLeaf = false)
+    {
+        base.ToggleEnable(isLeaf);
+
+        if(!isLeaf)
+        {
+            var labelText = VisualElement.Q<Label>("vsubtree-label").text;
+
+             if(!Enabled)
+                labelText += " ...";
+        
+            else
+                labelText = labelText.Remove(labelText.Length-4,4);
+            VisualElement.Q<Label>("vsubtree-label").text = labelText;
+        }
+    }
+
+    public override void Enable(bool enable)
+    {
+
+        base.Enable(enable);
+
+        VisualElement.Q<VisualElement>("vsubtree-label").style.display = DisplayStyle.Flex;
+        VisualElement.Q<VisualElement>("vertical-line").style.display = Enabled ? DisplayStyle.Flex : DisplayStyle.None;
+
+        if(VisualElement.Q<VisualElement>("parent-connection") !=  null)
+            VisualElement.Q<VisualElement>("parent-connection").style.display = DisplayStyle.Flex;
+
+    }
+
+    public override void Hide()
+    {
+        VisualElement.Q<VisualElement>("vsubtree-label").style.display = DisplayStyle.None;
+        VisualElement.Q<VisualElement>("vertical-line").style.display = DisplayStyle.None;
+        VisualElement.Q<VisualElement>("parent-connection").style.display = DisplayStyle.None;
+
+    }
+
+    
+    public override int CompareTo(VisualElementWrapper other)
+    {
+        if(other is not HierarchyWrapper)
+            return -2;
+
+        if(Convert.ToInt32(VisualElement.name) < Convert.ToInt32(other.VisualElement.name))
+            return -1;
+    
+        if(Convert.ToInt32(VisualElement.name) > Convert.ToInt32(other.VisualElement.name))
+            return 1;
+        
+        return 0;
+    }
+}
+
+public abstract class VisualElementWrapper : IComparable<VisualElementWrapper>
 {
     private VisualElement _visualElement;
     public VisualElement VisualElement => _visualElement;
@@ -18,48 +95,29 @@ public class VisualElementWrapper : IComparable<VisualElementWrapper>
 
     public bool Enabled => _enable;
 
-    public void ToggleEnable()
-    {
-        Enable(!_enable);
-    }
-
-    public void Enable(bool enable)
-    {
-        _enable = enable;
-        _visualElement.Q<VisualElement>("vsubtree-label").style.display = DisplayStyle.Flex;
-        _visualElement.Q<VisualElement>("vertical-line").style.display = _enable? DisplayStyle.Flex : DisplayStyle.None;
-
-        if(_visualElement.Q<VisualElement>("parent-connection") !=  null)
-            _visualElement.Q<VisualElement>("parent-connection").style.display = DisplayStyle.Flex;
-
-    }
-
-    public void Hide()
-    {
-        _visualElement.Q<VisualElement>("vsubtree-label").style.display = DisplayStyle.None;
-        _visualElement.Q<VisualElement>("vertical-line").style.display = DisplayStyle.None;
-        _visualElement.Q<VisualElement>("parent-connection").style.display = DisplayStyle.None;
-
-    }
-
     public VisualElementWrapper(VisualElement visualElement)
     {
         _visualElement = visualElement;
     }
 
-    //Comparison
-    public int CompareTo(VisualElementWrapper other)
+
+    public virtual void ToggleEnable(bool isLeaf = false)
     {
-        if(Convert.ToInt32(_visualElement.name) < Convert.ToInt32(other._visualElement.name))
-            return -1;
-    
-        if(Convert.ToInt32(_visualElement.name) > Convert.ToInt32(other._visualElement.name))
-            return 1;
-        
-        return 0;
+        Enable(!_enable);
     }
 
-    int GetDepth()
+    public virtual void Enable(bool enable)
+    {
+        _enable = enable;
+    }
+
+    public virtual void Hide(){}
+
+    //Comparison
+    public abstract int CompareTo(VisualElementWrapper other);
+
+
+    public int GetDepth()
     {
         int depth = 0;
         VisualElement ve = _visualElement;
@@ -80,9 +138,11 @@ public class TreEditorWindow : EditorWindow
     private BinarySearchTree<int> tree = new BinarySearchTree<int>();
     private BinarySearchTree<Vec2> displayTree;
 
-    private BinarySearchTree<VisualElementWrapper> _testTree = new BinarySearchTree<VisualElementWrapper>();
+    private BinarySearchTree<VisualElementWrapper> _hierachy = new BinarySearchTree<VisualElementWrapper>();
     
-    BinaryTreeNode<VisualElementWrapper> _selectedNode = null;
+    private BinaryTreeNode<VisualElementWrapper> _selectedNode = null;
+
+    private List<GraphNodeWrapper> _graphNodes = new List<GraphNodeWrapper>();
 
     private float _hierarchyYOffset = 0;
 
@@ -106,6 +166,7 @@ public class TreEditorWindow : EditorWindow
         tree.Insert(3);
         tree.Insert(8);
         tree.Insert(13);
+        tree.Insert(12);
 
         /*tree.Insert(5);
         tree.Insert(4);
@@ -176,9 +237,9 @@ public class TreEditorWindow : EditorWindow
 
         tree.PreorderTraversal(Insert, NewVisualSubTree);
 
-        ReparentHierarchyNodes(_testTree.Root);
+        ReparentHierarchyNodes(_hierachy.Root);
 
-        RegisterClickEvents(_testTree.Root);
+        RegisterClickEvents(_hierachy.Root);
 
     }
 
@@ -199,8 +260,8 @@ public class TreEditorWindow : EditorWindow
     private void OnClickVisualSubTree(BinaryTreeNode<VisualElementWrapper> node)
     {   
         _selectedNode = node;
-        node.Data.ToggleEnable();
-        EnableDisableVisualSubTrees(_testTree.Root);
+        node.Data.ToggleEnable(node.IsLeaf);
+        EnableDisableVisualSubTrees(_hierachy.Root);
     }
 
     private void EnableDisableVisualSubTrees(BinaryTreeNode<VisualElementWrapper> node)
@@ -248,7 +309,7 @@ public class TreEditorWindow : EditorWindow
         }
     }
 
-    public VisualElementWrapper NewVisualSubTree(BinaryTreeNode<int> node)
+    public HierarchyWrapper NewVisualSubTree(BinaryTreeNode<int> node)
     {
         VisualElement subTree = new VisualElement();
         subTree.name = node.Data.ToString();//for comparison
@@ -302,7 +363,8 @@ public class TreEditorWindow : EditorWindow
             subTree.Add(line2);
         }
 
-        VisualElementWrapper wrapper = new VisualElementWrapper(subTree);
+        //VisualElementWrapper wrapper = new VisualElementWrapper(subTree);
+        HierarchyWrapper wrapper = new HierarchyWrapper(subTree);
 
         return wrapper;
     }
@@ -381,16 +443,66 @@ public class TreEditorWindow : EditorWindow
             label.style.position = Position.Absolute;
             label.style.left = nodes[i].Data.X;
             label.style.top = nodes[i].Data.Y;
+
+            if(nodes[i].Left != null)
+                treeLevel.Add(DrawConnection(nodes[i], nodes[i].Left));
+
+            if(nodes[i].Right!= null)
+                treeLevel.Add(DrawConnection(nodes[i], nodes[i].Right));
             
             treeLevel.Add(label);
+            //Wrap this visual element to be able reference it later
+            _graphNodes.Add(new GraphNodeWrapper(img));
+            _graphNodes[_graphNodes.Count-1].Level = nodes[i].Level;
+            _graphNodes[_graphNodes.Count-1].LevelIndex = nodes[i].LevelIndex;
+            img.RegisterCallback<ContextClickEvent>(_ =>
+            {
+                Debug.Log("Mouse right clicked " +  _graphNodes[_graphNodes.Count-1].VisualElement);
+                _graphNodes[_graphNodes.Count-1].ToggleEnable();
+            });
         }
-
+        
         return treeLevel;
+    }
+    
+    //Draws vertical or horizontal lines
+    private VisualElement DrawLine(Vec2 startPos, Vec2 endPos)
+    {
+        VisualElement line = new VisualElement();
+        var lineSize = endPos-startPos;
+        Debug.Log("LINESIZE.Y: " + lineSize.Y);
+        Debug.Log("LINESIZE.X: " + lineSize.X);
+        line.style.position = Position.Absolute;
+        line.style.height = lineSize.Y <= 0 ? 5 : lineSize.Y;
+        line.style.width = lineSize.X <= 0 ? 5 : lineSize.X;
+        line.style.backgroundColor = Color.black;
+        line.style.top = startPos.Y;
+        line.style.left = startPos.X;
+        return line;
+    }
+
+    public VisualElement DrawConnection(BinaryTreeNode<Vec2> node, BinaryTreeNode<Vec2> childnode)
+    {
+        VisualElement linesContainer = new VisualElement();
+        linesContainer.Add(DrawLine(node.Data+new Vec2(32,64), node.Data+new Vec2(32,0) + new Vec2(0,90)));
+        
+        var yOffset = childnode.Data.Y - node.Data.Y;
+        var v1 = node.Data+new Vec2(32,0) + new Vec2(0,90);
+        var v2 = new Vec2(childnode.Data.X+32,v1.Y);
+
+        if(childnode == node.Right)
+            linesContainer.Add(DrawLine(v1, v2));
+        if(childnode == node.Left)
+            linesContainer.Add(DrawLine(v2, v1 + new Vec2(5,0)));
+
+        linesContainer.Add(DrawLine(v2, childnode.Data + new Vec2(32,0)));
+
+        return linesContainer;
     }
 
     public void Insert(VisualElementWrapper node)
     {
-        _testTree.Insert(node);
+        _hierachy.Insert(node);
     }
 
     void StartUpdateLoop()

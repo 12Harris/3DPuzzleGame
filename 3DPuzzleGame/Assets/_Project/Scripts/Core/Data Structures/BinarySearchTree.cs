@@ -436,7 +436,7 @@ public class Vec2 : IComparable<Vec2>
 
         public float GetBottomNodeDisplayDistance()
         {
-            return 500/(int)Math.Pow(2,_levels);
+            return (200*_levels)/(int)Math.Pow(2,_levels);
         }
 
         public float GetNodeVDisplayDistanceAbsolute(int level)
